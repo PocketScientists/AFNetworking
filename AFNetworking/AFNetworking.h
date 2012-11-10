@@ -30,6 +30,7 @@
 
     #import "AFHTTPRequestOperation.h"
     #import "AFJSONRequestOperation.h"
+    #import "AFJSONPRequestOperation.h"
     #import "AFXMLRequestOperation.h"
     #import "AFPropertyListRequestOperation.h"
     #import "AFHTTPClient.h"
