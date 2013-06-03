@@ -28,9 +28,9 @@
 static NSTimeInterval const kAFNetworkActivityIndicatorInvisibilityDelay = 0.17;
 
 @interface AFNetworkActivityIndicatorManager ()
-@property (readwrite, assign) NSInteger activityCount;
+@property (readwrite, nonatomic, assign) NSInteger activityCount;
 @property (readwrite, nonatomic, strong) NSTimer *activityIndicatorVisibilityTimer;
-@property (readonly, getter = isNetworkActivityIndicatorVisible) BOOL networkActivityIndicatorVisible;
+@property (readonly, nonatomic, getter = isNetworkActivityIndicatorVisible) BOOL networkActivityIndicatorVisible;
 
 - (void)updateNetworkActivityIndicatorVisibility;
 - (void)updateNetworkActivityIndicatorVisibilityDelayed;
@@ -62,8 +62,8 @@ static NSTimeInterval const kAFNetworkActivityIndicatorInvisibilityDelay = 0.17;
         return nil;
     }
 
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(incrementActivityCount) name:AFNetworkingOperationDidStartNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(decrementActivityCount) name:AFNetworkingOperationDidFinishNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkingOperationDidStart:) name:AFNetworkingOperationDidStartNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(networkingOperationDidFinish:) name:AFNetworkingOperationDidFinishNotification object:nil];
 
     return self;
 }
@@ -105,7 +105,10 @@ static NSTimeInterval const kAFNetworkActivityIndicatorInvisibilityDelay = 0.17;
 	@synchronized(self) {
 		_activityCount = activityCount;
 	}
-    [self updateNetworkActivityIndicatorVisibilityDelayed];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateNetworkActivityIndicatorVisibilityDelayed];
+    });
 }
 
 - (void)incrementActivityCount {
@@ -114,16 +117,39 @@ static NSTimeInterval const kAFNetworkActivityIndicatorInvisibilityDelay = 0.17;
 		_activityCount++;
 	}
     [self didChangeValueForKey:@"activityCount"];
-    [self updateNetworkActivityIndicatorVisibilityDelayed];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateNetworkActivityIndicatorVisibilityDelayed];
+    });
 }
 
 - (void)decrementActivityCount {
     [self willChangeValueForKey:@"activityCount"];
 	@synchronized(self) {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu"
 		_activityCount = MAX(_activityCount - 1, 0);
+#pragma clang diagnostic pop
 	}
     [self didChangeValueForKey:@"activityCount"];
-    [self updateNetworkActivityIndicatorVisibilityDelayed];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateNetworkActivityIndicatorVisibilityDelayed];
+    });
+}
+
+- (void)networkingOperationDidStart:(NSNotification *)notification {
+    AFURLConnectionOperation *connectionOperation = [notification object];
+    if (connectionOperation.request.URL) {
+        [self incrementActivityCount];
+    }
+}
+
+- (void)networkingOperationDidFinish:(NSNotification *)notification {
+    AFURLConnectionOperation *connectionOperation = [notification object];
+    if (connectionOperation.request.URL) {
+        [self decrementActivityCount];
+    }
 }
 
 @end
