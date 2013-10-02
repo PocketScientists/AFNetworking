@@ -5,21 +5,19 @@ namespace :test do
 
   desc "Run the AFNetworking Tests for iOS"
   task :ios => :prepare do
-    $ios_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'iOS Tests' build -sdk iphonesimulator -configuration Release")
-    $ios_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'iOS Tests' build-tests -sdk iphonesimulator -configuration Release")
-    $ios_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'iOS Tests' test -test-sdk iphonesimulator -configuration Release")
+    $ios_success_5_0 = system("xctool -workspace AFNetworking.xcworkspace -scheme 'iOS Tests' -sdk iphonesimulator5.0 -configuration Release test -test-sdk iphonesimulator5.0")
+    $ios_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'iOS Tests' -sdk iphonesimulator -configuration Release test -test-sdk iphonesimulator")
   end
 
   desc "Run the AFNetworking Tests for Mac OS X"
   task :osx => :prepare do
-    $osx_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'OS X Tests' build -sdk macosx -configuration Release")
-    $osx_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'OS X Tests' build-tests -sdk macosx -configuration Release")
-    $osx_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'OS X Tests' test -test-sdk macosx -sdk macosx -configuration Release")
+    $osx_success = system("xctool -workspace AFNetworking.xcworkspace -scheme 'OS X Tests' -sdk macosx -configuration Release test -test-sdk macosx")
   end
 end
 
 desc "Run the AFNetworking Tests for iOS & Mac OS X"
 task :test => ['test:ios', 'test:osx'] do
+  puts "\033[0;31m! iOS unit tests failed under iPhone Simulator 5.0 SDK" unless $ios_success_5_0
   puts "\033[0;31m! iOS unit tests failed" unless $ios_success
   puts "\033[0;31m! OS X unit tests failed" unless $osx_success
   if $ios_success && $osx_success
