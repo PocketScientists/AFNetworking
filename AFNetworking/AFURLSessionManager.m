@@ -464,6 +464,10 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
                                       progress:(NSProgress * __autoreleasing *)progress
                              completionHandler:(void (^)(NSURLResponse *response, id responseObject, NSError *error))completionHandler
 {
+    if (!uploadTask) {
+        return nil;
+    }
+    
     AFURLSessionManagerTaskDelegate *delegate = [AFURLSessionManagerTaskDelegate delegateForManager:self completionHandler:completionHandler];
 
     delegate.uploadProgress = [NSProgress progressWithTotalUnitCount:uploadTask.countOfBytesExpectedToSend];
@@ -512,6 +516,10 @@ expectedTotalBytes:(int64_t)expectedTotalBytes {
                                        destination:(NSURL * (^)(NSURL *targetPath, NSURLResponse *response))destination
                                  completionHandler:(void (^)(NSURLResponse *response, NSURL *filePath, NSError *error))completionHandler
 {
+    if (!downloadTask) {
+        return nil;
+    }
+    
     AFURLSessionManagerTaskDelegate *delegate = [AFURLSessionManagerTaskDelegate delegateForManager:self completionHandler:completionHandler];
     delegate.downloadTaskDidFinishDownloading = ^NSURL * (NSURLSession * __unused session, NSURLSessionDownloadTask *task, NSURL *location) {
         if (destination) {
@@ -731,6 +739,10 @@ didCompleteWithError:(NSError *)error
     }
 
     [self removeDelegateForTask:task];
+    
+    @try {
+        [task removeObserver:self forKeyPath:@"state" context:AFTaskStateChangedContext];
+    } @catch (NSException *exception) {}
 }
 
 #pragma mark - NSURLSessionDataDelegate
@@ -792,8 +804,6 @@ didBecomeDownloadTask:(NSURLSessionDownloadTask *)downloadTask
     if (self.didFinishEventsForBackgroundURLSession) {
         self.didFinishEventsForBackgroundURLSession(session);
     }
-   
-    [self removeAllDelegates];
 }
 
 #pragma mark - NSURLSessionDownloadDelegate
@@ -859,10 +869,6 @@ expectedTotalBytes:(int64_t)expectedTotalBytes
                 break;
             case NSURLSessionTaskStateCompleted:
                 // AFNetworkingTaskDidFinishNotification posted by task completion handlers
-                @try {
-                    [object removeObserver:self forKeyPath:@"state" context:AFTaskStateChangedContext];
-                } @catch (NSException *exception) {}
-                break;
             default:
                 break;
         }
