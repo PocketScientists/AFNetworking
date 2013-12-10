@@ -186,7 +186,7 @@ extern NSString * const AFNetworkingOperationFailingURLResponseErrorKey;
         data = [responseString dataUsingEncoding:NSUTF8StringEncoding];
 
         if (data) {
-            if ([data length] > 0) {
+            if ([data length] > 0 && [data isKindOfClass:[NSData class]]) {
                 return [NSJSONSerialization JSONObjectWithData:data options:self.readingOptions error:error];
             } else {
                 return nil;
