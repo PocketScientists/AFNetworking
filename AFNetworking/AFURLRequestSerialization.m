@@ -392,15 +392,15 @@ static NSString * const kAFMultipartFormCRLF = @"\r\n";
 
 static NSInteger const kAFStreamToStreamBufferSize = 1024 * 1024; //1 meg default
 
-static inline NSString * AFMultipartFormInitialBoundary() {
+static inline NSString * AFMultipartFormInitialBoundary(void) {
     return [NSString stringWithFormat:@"--%@%@", kAFMultipartFormBoundary, kAFMultipartFormCRLF];
 }
 
-static inline NSString * AFMultipartFormEncapsulationBoundary() {
+static inline NSString * AFMultipartFormEncapsulationBoundary(void) {
     return [NSString stringWithFormat:@"%@--%@%@", kAFMultipartFormCRLF, kAFMultipartFormBoundary, kAFMultipartFormCRLF];
 }
 
-static inline NSString * AFMultipartFormFinalBoundary() {
+static inline NSString * AFMultipartFormFinalBoundary(void) {
     return [NSString stringWithFormat:@"%@--%@--%@", kAFMultipartFormCRLF, kAFMultipartFormBoundary, kAFMultipartFormCRLF];
 }
 
